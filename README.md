@@ -163,7 +163,7 @@ Este projeto é um sistema de gerenciamento financeiro pessoal que permite aos u
 4. **Integração com Backend:**
 
    - Utilize `axios` para fazer as requisições à API.
-   - Mantenha o estado global da aplicação com `Context API` ou `Redux` (se necessário).
+  
 
 5. **Testes e Deploy:**
    - Teste a aplicação em diferentes navegadores e dispositivos.
