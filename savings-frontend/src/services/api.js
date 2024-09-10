@@ -15,6 +15,26 @@ export const getCreditCardExpenses = async () => {
   }
 };
 
+export const getSpendingLimit = async () => {
+  try {
+    const response = await api.get("/spending-limit");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching spending limit", error);
+    throw error;
+  }
+};
+
+export const addSpendingLimit = async (limit) => {
+  try {
+    const response = await api.post("/spending-limit", limit);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding spending limit", error);
+    throw error;
+  }
+};
+
 // Funções para metas financeiras
 export const getFinancialGoals = async () => {
   try {

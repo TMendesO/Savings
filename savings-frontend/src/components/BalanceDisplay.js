@@ -10,7 +10,7 @@ function BalanceDisplay() {
         const response = await api.get("/transactions");
         const transactions = response.data;
         const totalBalance = transactions.reduce((acc, transaction) => {
-          return transaction.type === "Income"
+          return transaction.type === "ganho"
             ? acc + transaction.amount
             : acc - transaction.amount;
         }, 0);

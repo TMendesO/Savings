@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"savings-backend/models"
 
@@ -21,7 +20,6 @@ func CreateTransaction(c *gin.Context) {
 }
 
 func GetTransactions(c *gin.Context) {
-	fmt.Println("hello word")
 	var transactions []models.Transaction
 	models.DB.Find(&transactions)
 	c.JSON(http.StatusOK, transactions)
