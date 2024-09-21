@@ -75,7 +75,7 @@ const WishList = () => {
               <IconButton
                 edge="end"
                 aria-label="delete"
-                onClick={() => handleRemoveItem(item.id)}
+                onClick={() => handleRemoveItem(item.ID)}
               >
                 <DeleteIcon />
               </IconButton>

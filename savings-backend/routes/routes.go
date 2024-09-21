@@ -9,6 +9,7 @@ import (
 func SetupRoutes(router *gin.Engine) {
 	router.POST("/transactions", controllers.CreateTransaction)
 	router.GET("/transactions", controllers.GetTransactions)
+	router.DELETE("/transactions/:id", controllers.DeleteTransaction)
 	router.POST("/calendar", controllers.CreateCalendarEvent)
 	router.GET("/calendar", controllers.GetCalendarEvents)
 	router.POST("/financial-goals", controllers.CreateFinancialGoal)

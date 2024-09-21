@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { CssBaseline, Button } from "@mui/material";
+import { CssBaseline } from "@mui/material";
 import Home from "./pages/Home";
 import Transactions from "./components/TransactionForm";
 import Calendar from "./components/Calendar";
@@ -10,41 +10,43 @@ import Goals from "./components/FinancialGoals";
 import WishList from "./components/WishList";
 import Header from "./components/Header";
 
-function App() {
-  const [darkMode, setDarkMode] = useState(false);
+const App = () => {
+  const [ws, setWs] = useState(null);
 
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? "dark" : "light",
-    },
-  });
+  useEffect(() => {
+    const socket = new WebSocket("ws://localhost:8080/ws");
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+    socket.onopen = () => {
+      console.log("Conectado ao WebSocket");
+    };
+
+    socket.onclose = () => {
+      console.log("Desconectado do WebSocket");
+    };
+
+    setWs(socket);
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={createTheme()}>
       <CssBaseline />
       <Router>
         <Header />
-        <Button
-          onClick={toggleDarkMode}
-          style={{ position: "absolute", top: 10, right: 10 }}
-        >
-          {darkMode ? "Light Mode" : "Dark Mode"}
-        </Button>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/credit-card" element={<CreditCard />} />
-          <Route path="/goals" element={<Goals />} />
-          <Route path="/wish-list" element={<WishList />} />
+          <Route path="/transactions" element={<Transactions ws={ws} />} />
+          <Route path="/calendar" element={<Calendar ws={ws} />} />
+          <Route path="/credit-card" element={<CreditCard ws={ws} />} />
+          <Route path="/goals" element={<Goals ws={ws} />} />
+          <Route path="/wish-list" element={<WishList ws={ws} />} />
         </Routes>
       </Router>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

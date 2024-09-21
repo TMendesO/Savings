@@ -3,7 +3,7 @@ import { TextField, Button, Box, Typography, Paper } from "@mui/material";
 import { getSpendingLimit, addSpendingLimit } from "../services/api";
 import SpendingLimitList from "./SpendingLimitList";
 
-const SpendingLimit = () => {
+const SpendingLimit = ({ ws }) => {
   const [category, setCategory] = useState("");
   const [amount, setLimit] = useState(0);
   const [period, setPeriod] = useState("");
@@ -19,7 +19,15 @@ const SpendingLimit = () => {
 
   useEffect(() => {
     fetchSpendingLimit();
-  }, []);
+    if (ws) {
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "SPENDING_LIMIT_UPDATED") {
+          fetchSpendingLimit();
+        }
+      };
+    }
+  }, [ws]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,6 +38,7 @@ const SpendingLimit = () => {
           ...plans,
           amount: parseFloat(plans.amount),
         });
+        ws.send(JSON.stringify({ type: "SPENDING_LIMIT_UPDATED" }));
         setCategory([...category, data]);
         setLimit([...amount, data]);
         setPeriod([...period, data]);

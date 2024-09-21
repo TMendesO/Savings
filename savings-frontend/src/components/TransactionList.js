@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api";
+import { getTransactions, removeTransaction } from "../services/api";
 import {
   Container,
   Table,
@@ -8,19 +8,50 @@ import {
   TableHead,
   TableRow,
   Paper,
+  IconButton,
 } from "@mui/material";
 import { AttachMoney, ShoppingCart } from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-function TransactionList() {
+function TransactionList({ ws }) {
   const [transactions, setTransactions] = useState([]);
 
+  const fetchTransactions = async () => {
+    try {
+      const response = await getTransactions();
+      if (response) {
+        setTransactions(response);
+      } else {
+        setTransactions([]);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar transações", error);
+      setTransactions([]);
+    }
+  };
+
+  const handleRemoveTransaction = async (id) => {
+    try {
+      await removeTransaction(id);
+      fetchTransactions();
+    } catch (error) {
+      console.error("Error removing transaction", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransactions = async () => {
-      const response = await api.get("/transactions");
-      setTransactions(response.data);
-    };
     fetchTransactions();
-  }, []);
+
+    if (ws) {
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+
+        if (message.type === "TRANSACTION_ADDED") {
+          fetchTransactions();
+        }
+      };
+    }
+  }, [ws]);
 
   return (
     <Container component={Paper} style={{ marginTop: "20px" }}>
@@ -32,24 +63,42 @@ function TransactionList() {
             <TableCell>Descrição</TableCell>
             <TableCell>Data</TableCell>
             <TableCell>Status</TableCell>
+            <TableCell>Ações</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {transactions.map((transaction) => (
-            <TableRow key={transaction.id}>
-              <TableCell>
-                {transaction.type === "gasto" ? (
-                  <ShoppingCart color="error" />
-                ) : (
-                  <AttachMoney color="success" />
-                )}
+          {Array.isArray(transactions) && transactions.length > 0 ? (
+            transactions.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell>
+                  {transaction.type === "gasto" ? (
+                    <ShoppingCart color="error" />
+                  ) : (
+                    <AttachMoney color="success" />
+                  )}
+                </TableCell>
+                <TableCell>{transaction.amount}</TableCell>
+                <TableCell>{transaction.description}</TableCell>
+                <TableCell>{transaction.date}</TableCell>
+                <TableCell>{transaction.status}</TableCell>
+                <TableCell>
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={() => handleRemoveTransaction(transaction.ID)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                Nenhuma transação encontrada
               </TableCell>
-              <TableCell>{transaction.amount}</TableCell>
-              <TableCell>{transaction.description}</TableCell>
-              <TableCell>{transaction.date}</TableCell>
-              <TableCell>{transaction.status}</TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </Container>

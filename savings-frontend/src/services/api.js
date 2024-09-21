@@ -4,7 +4,7 @@ const api = axios.create({
   baseURL: "http://localhost:8080",
 });
 
-// Funções para despesas do cartão de crédito
+// Funções CreditCard
 export const getCreditCardExpenses = async () => {
   try {
     const response = await api.get("/credit-card");
@@ -15,6 +15,7 @@ export const getCreditCardExpenses = async () => {
   }
 };
 
+// Funções SpendingLimit
 export const getSpendingLimit = async () => {
   try {
     const response = await api.get("/spending-limit");
@@ -35,7 +36,7 @@ export const addSpendingLimit = async (limit) => {
   }
 };
 
-// Funções para metas financeiras
+// Funções FinancialGoals
 export const getFinancialGoals = async () => {
   try {
     const response = await api.get("/financial-goals");
@@ -65,7 +66,7 @@ export const removeFinancialGoal = async (goalId) => {
   }
 };
 
-// Funções para lista de desejos
+// Funções WishList
 export const getWishList = async () => {
   try {
     const response = await api.get("/wish-list");
@@ -95,13 +96,32 @@ export const removeWishItem = async (itemId) => {
   }
 };
 
-// Funções para transações
+// Funções Transaction
 export const createTransaction = async (transactionData) => {
   try {
     const response = await api.post("/transactions", transactionData);
     return response.data;
   } catch (error) {
     console.error("Error creating transaction", error);
+    throw error;
+  }
+};
+
+export const getTransactions = async () => {
+  try {
+    const response = await api.get("/transactions");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching wish list", error);
+    throw error;
+  }
+};
+
+export const removeTransaction = async (transactionsId) => {
+  try {
+    await api.delete(`/transactions/${transactionsId}`);
+  } catch (error) {
+    console.error("Error removing transactions", error);
     throw error;
   }
 };

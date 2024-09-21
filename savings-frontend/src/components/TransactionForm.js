@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -13,12 +13,23 @@ import {
 import TransactionList from "./TransactionList";
 import api from "../services/api";
 
-function TransactionForm({ onTransactionAdded }) {
+function TransactionForm({ onTransactionAdded, ws }) {
   const [transactionType, setTransactionType] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    if (ws) {
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "TRANSACTION_ADDED") {
+          onTransactionAdded(message.data);
+        }
+      };
+    }
+  }, [ws, onTransactionAdded]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +54,9 @@ function TransactionForm({ onTransactionAdded }) {
           amount: parseFloat(transaction.amount),
         });
         if (response.status === 200) {
+          ws.send(
+            JSON.stringify({ type: "TRANSACTION_ADDED", data: response.data })
+          );
           onTransactionAdded(response.data);
           resetForm();
         }
@@ -68,6 +82,9 @@ function TransactionForm({ onTransactionAdded }) {
           amount: parseFloat(transaction.amount),
         });
         if (response.status === 200) {
+          ws.send(
+            JSON.stringify({ type: "TRANSACTION_ADDED", data: response.data })
+          );
           onTransactionAdded(response.data);
           resetForm();
         }
@@ -128,7 +145,7 @@ function TransactionForm({ onTransactionAdded }) {
               onChange={(e) => setDescription(e.target.value)}
               fullWidth
             />
-            {transactionType === "gastos" && (
+            {transactionType === "gasto" && (
               <TextField
                 label="Status"
                 value={status}
