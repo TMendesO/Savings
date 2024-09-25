@@ -15,6 +15,16 @@ export const getCreditCardExpenses = async () => {
   }
 };
 
+export const addCreditCardExpenses = async (creditCardData) => {
+  try {
+    const response = await api.post("/credit-card", creditCardData);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding Craedit card", error);
+    throw error;
+  }
+};
+
 // Funções SpendingLimit
 export const getSpendingLimit = async () => {
   try {
@@ -122,6 +132,46 @@ export const removeTransaction = async (transactionsId) => {
     await api.delete(`/transactions/${transactionsId}`);
   } catch (error) {
     console.error("Error removing transactions", error);
+    throw error;
+  }
+};
+
+// Funções Calendar
+export const getCalendarEvents = async () => {
+  try {
+    const response = await api.get("/calendar");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching calendar events", error);
+    throw error;
+  }
+};
+
+export const addCalendarEvent = async (event) => {
+  try {
+    const response = await api.post("/calendar", event);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding calendar event", error);
+    throw error;
+  }
+};
+
+export const editCalendarEvent = async (eventId, updatedEvent) => {
+  try {
+    const response = await api.put(`/calendar/${eventId}`, updatedEvent);
+    return response.data;
+  } catch (error) {
+    console.error("Error editing calendar event", error);
+    throw error;
+  }
+};
+
+export const removeCalendarEvent = async (eventId) => {
+  try {
+    await api.delete(`/calendar/${eventId}`);
+  } catch (error) {
+    console.error("Error removing calendar event", error);
     throw error;
   }
 };

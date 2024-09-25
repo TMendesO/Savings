@@ -22,3 +22,26 @@ func GetCalendarEvents(c *gin.Context) {
 	models.DB.Find(&events)
 	c.JSON(http.StatusOK, events)
 }
+
+func UpdateCalendarEvent(c *gin.Context) {
+	var event models.CalendarEvent
+	if err := c.ShouldBindJSON(&event); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id := c.Param("id")
+	if err := models.DB.Model(&event).Where("id = ?", id).Updates(&event).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, event)
+}
+
+func DeleteCalendarEvent(c *gin.Context) {
+	id := c.Param("id")
+	if err := models.DB.Delete(&models.CalendarEvent{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Evento deletado com sucesso"})
+}

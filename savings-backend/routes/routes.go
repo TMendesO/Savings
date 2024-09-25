@@ -12,6 +12,8 @@ func SetupRoutes(router *gin.Engine) {
 	router.DELETE("/transactions/:id", controllers.DeleteTransaction)
 	router.POST("/calendar", controllers.CreateCalendarEvent)
 	router.GET("/calendar", controllers.GetCalendarEvents)
+	router.PUT("/calendar/:id", controllers.UpdateCalendarEvent)
+	router.DELETE("/calendar/:id", controllers.DeleteCalendarEvent)
 	router.POST("/financial-goals", controllers.CreateFinancialGoal)
 	router.GET("/financial-goals", controllers.GetFinancialGoals)
 	router.POST("/credit-card", controllers.CreateCreditCardExpense)

@@ -4,8 +4,9 @@ import "gorm.io/gorm"
 
 type CreditCardExpense struct {
 	gorm.Model
-	Amount      float64 `json:"amount"`
-	Description string  `json:"description"`
-	Date        string  `json:"date"`
-	Status      string  `json:"status"`
+	Bank       string  `json:"bank"`
+	Limit      float64 `json:"limit"`
+	Expiration string  `json:"expiration"`
+	Value      float64 `json:"value"`
+	Balance    float64 `json:"balance"`
 }

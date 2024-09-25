@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Container, TextField, Button, Paper } from "@mui/material";
+import { Container, TextField, Button, Paper, IconButton } from "@mui/material";
+import { Edit, Delete } from "@mui/icons-material";
 import api from "../services/api";
 
 function Calendar() {
@@ -7,6 +8,8 @@ function Calendar() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [currentEventId, setCurrentEventId] = useState(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -24,15 +27,38 @@ function Calendar() {
     e.preventDefault();
     const newEvent = { title, description, date };
     try {
-      const response = await api.post("/calendar", newEvent);
-      if (response.status === 201) {
-        setEvents([...events, response.data]);
-        setTitle("");
-        setDescription("");
-        setDate("");
+      if (editMode) {
+        await api.put(`/calendar/${currentEventId}`, newEvent);
+      } else {
+        const response = await api.post("/calendar", newEvent);
+        if (response.status === 201) {
+          setEvents([...events, response.data]);
+        }
       }
+      setTitle("");
+      setDescription("");
+      setDate("");
+      setEditMode(false);
+      setCurrentEventId(null);
     } catch (error) {
-      console.error("Error adding event", error);
+      console.error("Error adding/editing event", error);
+    }
+  };
+
+  const handleEdit = (event) => {
+    setTitle(event.title);
+    setDescription(event.description);
+    setDate(event.date);
+    setEditMode(true);
+    setCurrentEventId(event.id);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/calendar/${id}`);
+      setEvents(events.filter((event) => event.id !== id));
+    } catch (error) {
+      console.error("Error deleting event", error);
     }
   };
 
@@ -63,7 +89,7 @@ function Calendar() {
           InputLabelProps={{ shrink: true }}
         />
         <Button type="submit" variant="contained" color="primary">
-          Add Evento
+          {editMode ? "Editar Evento" : "Adicionar Evento"}
         </Button>
       </form>
       <ul>
@@ -72,6 +98,12 @@ function Calendar() {
             <h3>{event.title}</h3>
             <p>{event.description}</p>
             <p>{event.date}</p>
+            <IconButton onClick={() => handleEdit(event)}>
+              <Edit />
+            </IconButton>
+            <IconButton onClick={() => handleDelete(event.ID)}>
+              <Delete />
+            </IconButton>
           </li>
         ))}
       </ul>
