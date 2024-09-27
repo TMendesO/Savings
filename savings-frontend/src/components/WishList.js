@@ -1,38 +1,81 @@
 import React, { useState, useEffect } from "react";
-import { getWishList, addWishItem, removeWishItem } from "../services/api";
 import {
-  List,
-  ListItem,
-  ListItemText,
-  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box,
   TextField,
   Button,
-  Box,
-  Typography,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { getWishList } from "../services/api";
+import api from "../services/api";
 
-const WishList = () => {
-  const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState("");
+const WishList = ({ ws, addWishItem, removeWishItem }) => {
+  const [wishList, setWishList] = useState([]);
+  const [wishTitle, setWishTitle] = useState([]);
+  const [wishDescription, setWishDescription] = useState([]);
+  const [wishPrice, setWishPrice] = useState([]);
+  const [wishPriority, setWishPriority] = useState([]);
+
+  useEffect(() => {
+    if (ws) {
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "WISH_ADDED") {
+          addWishItem(message.data);
+        }
+      };
+    }
+  }, [ws, addWishItem]);
 
   const fetchItems = async () => {
     try {
       const data = await getWishList();
-      setItems(data);
+      console.log(data);
+      setWishList(data);
     } catch (error) {
       console.error("Error fetching wish list", error);
     }
   };
 
-  const handleAddItem = async () => {
-    try {
-      const data = await addWishItem({ description: newItem });
-      setItems([...items, data]);
-      setNewItem("");
-    } catch (error) {
-      console.error("Error adding wish item", error);
+  const handleAddWish = async (e) => {
+    e.preventDefault();
+    if (wishTitle && wishDescription && wishPrice && wishPriority) {
+      const parsedPrice = parseFloat(wishPrice);
+
+      const whishs = {
+        title: wishTitle,
+        description: wishDescription,
+        price: parsedPrice,
+        priority: wishPriority,
+      };
+
+      try {
+        const response = await api.post("/wish-list", whishs);
+        if (response.status === 200) {
+          ws.send(JSON.stringify({ type: "WISH_LIST", data: response.data }));
+          addWishItem(response.data);
+          resetForm();
+        }
+      } catch (error) {
+        console.error("Erro ao adicionar item a lista", error);
+      }
+    } else {
+      console.error("Todos os campos são obrigatórios.");
     }
+  };
+  const resetForm = () => {
+    setWishTitle("");
+    setWishDescription("");
+    setWishPrice("");
+    setWishPriority("");
   };
 
   const handleRemoveItem = async (id) => {
@@ -49,43 +92,73 @@ const WishList = () => {
   }, []);
 
   return (
-    <Box>
-      <Typography variant="h6">Lista de Desejos</Typography>
-      <Box display="flex" alignItems="center" mt={2}>
-        <TextField
-          label="Novo Item"
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-          fullWidth
-        />
-        <Button
-          onClick={handleAddItem}
-          variant="contained"
-          color="primary"
-          style={{ marginLeft: "8px" }}
-        >
-          Adicionar
-        </Button>
-      </Box>
-      <List>
-        {items.map((item) => (
-          <ListItem
-            key={item.id}
-            secondaryAction={
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleRemoveItem(item.ID)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            }
+    <Paper elevation={3}>
+      <Box p={2}>
+        <Typography variant="h6" component="div" gutterBottom>
+          Lista de Desejos
+        </Typography>
+        <form onSubmit={handleAddWish}>
+          <TextField
+            label="Titulo"
+            value={wishTitle}
+            onChange={(e) => setWishTitle(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Descrição"
+            value={wishDescription}
+            onChange={(e) => setWishDescription(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Preço"
+            type="number"
+            value={wishPrice}
+            onChange={(e) => setWishPrice(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+          />
+          <Select
+            value={wishPriority}
+            fullWidth
+            onChange={(e) => setWishPriority(e.target.value)}
+            label="Pioridade"
           >
-            <ListItemText primary={item.description} />
-          </ListItem>
-        ))}
-      </List>
-    </Box>
+            <MenuItem value="alta">Alta</MenuItem>
+            <MenuItem value="media">Média</MenuItem>
+            <MenuItem value="baixa">baixa</MenuItem>
+          </Select>
+          <p></p>
+          <Button type="submit" variant="contained" color="primary">
+            Adicionar{" "}
+          </Button>
+        </form>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Titulo</TableCell>
+              <TableCell>Descrição</TableCell>
+              <TableCell>Preço</TableCell>
+              <TableCell>Prioridade</TableCell>
+              <TableCell>Ação</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {wishList.map((whish) => (
+              <TableRow key={whish.id}>
+                <TableCell>{whish.title}</TableCell>
+                <TableCell>{whish.description}</TableCell>
+                <TableCell>{whish.price}</TableCell>
+                <TableCell>{whish.priority}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Box>
+    </Paper>
   );
 };
 

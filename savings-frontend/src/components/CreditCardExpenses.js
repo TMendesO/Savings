@@ -24,7 +24,6 @@ const CreditCardExpenses = ({ addCreditCardExpenses, ws }) => {
   const fetchExpenses = async () => {
     try {
       const data = await getCreditCardExpenses();
-      console.log(data);
       setExpenses(data);
     } catch (error) {
       console.error("Error fetching credit card expenses", error);

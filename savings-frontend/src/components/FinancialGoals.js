@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
+import { getFinancialGoals, removeFinancialGoal } from "../services/api";
+import api from "../services/api";
 import {
-  getFinancialGoals,
-  addFinancialGoal,
-  removeFinancialGoal,
-} from "../services/api";
-import {
-  List,
-  ListItem,
-  ListItemText,
-  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box,
   TextField,
   Button,
-  Box,
-  Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-const FinancialGoals = () => {
+const FinancialGoals = ({ ws, addFinancialGoal }) => {
   const [goals, setGoals] = useState([]);
-  const [newGoal, setNewGoal] = useState("");
+  const [goalsTitle, setGoalsTitle] = useState([]);
+  const [goalsAmount, setGoalsAmount] = useState([]);
+  const [goalsDate, setGoalsDate] = useState([]);
 
   const fetchGoals = async () => {
     try {
@@ -29,14 +30,49 @@ const FinancialGoals = () => {
     }
   };
 
-  const handleAddGoal = async () => {
-    try {
-      const data = await addFinancialGoal({ description: newGoal });
-      setGoals([...goals, data]);
-      setNewGoal("");
-    } catch (error) {
-      console.error("Error adding financial goal", error);
+  useEffect(() => {
+    if (ws) {
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "TRANSACTION_ADDED") {
+          addFinancialGoal(message.data);
+        }
+      };
     }
+  }, [ws, addFinancialGoal]);
+
+  const handleAddGoal = async (e) => {
+    e.preventDefault();
+    if (goalsTitle && goalsAmount && goalsDate) {
+      const parsedAmount = parseFloat(goalsAmount);
+
+      const expenses = {
+        title: goalsTitle,
+        target_date: goalsDate,
+        amount: parsedAmount,
+      };
+      console.log(expenses);
+
+      try {
+        const response = await api.post("/financial-goals", expenses);
+        if (response.status === 200) {
+          ws.send(
+            JSON.stringify({ type: "FINANCIAL_GOALS", data: response.data })
+          );
+          addFinancialGoal(response.data);
+          resetForm();
+        }
+      } catch (error) {
+        console.error("Erro ao criar a meta", error);
+      }
+    } else {
+      console.error("Todos os campos são obrigatórios.");
+    }
+  };
+  const resetForm = () => {
+    setGoalsTitle("");
+    setGoalsAmount("");
+    setGoalsDate("");
   };
 
   const handleRemoveGoal = async (id) => {
@@ -53,43 +89,59 @@ const FinancialGoals = () => {
   }, []);
 
   return (
-    <Box>
-      <Typography variant="h6">Metas Financeiras</Typography>
-      <Box display="flex" alignItems="center" mt={2}>
-        <TextField
-          label="Nova Meta"
-          value={newGoal}
-          onChange={(e) => setNewGoal(e.target.value)}
-          fullWidth
-        />
-        <Button
-          onClick={handleAddGoal}
-          variant="contained"
-          color="primary"
-          style={{ marginLeft: "8px" }}
-        >
-          Adicionar
-        </Button>
+    <Paper elevation={3}>
+      <Box p={2}>
+        <Typography variant="h6" component="div" gutterBottom>
+          Metas Financeiras
+        </Typography>
+        <form onSubmit={handleAddGoal}>
+          <TextField
+            label="Titulo"
+            value={goalsTitle}
+            onChange={(e) => setGoalsTitle(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Valor"
+            value={goalsAmount}
+            onChange={(e) => setGoalsAmount(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Data prevista"
+            type="date"
+            value={goalsDate}
+            onChange={(e) => setGoalsDate(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+          />
+          <Button type="submit" variant="contained" color="primary">
+            Adicionar{" "}
+          </Button>
+        </form>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Titulo</TableCell>
+              <TableCell>Valor</TableCell>
+              <TableCell>Data Prevista</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {goals.map((goal) => (
+              <TableRow key={goal.id}>
+                <TableCell>{goal.title}</TableCell>
+                <TableCell>{goal.amount}</TableCell>
+                <TableCell>{goal.target_date}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Box>
-      <List>
-        {goals.map((goal) => (
-          <ListItem
-            key={goal.id}
-            secondaryAction={
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleRemoveGoal(goal.id)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            }
-          >
-            <ListItemText primary={goal.description} />
-          </ListItem>
-        ))}
-      </List>
-    </Box>
+    </Paper>
   );
 };
 
