@@ -20,5 +20,14 @@ func CreateFinancialGoal(c *gin.Context) {
 func GetFinancialGoals(c *gin.Context) {
 	var goals []models.FinancialGoal
 	models.DB.Find(&goals)
-	c.JSON(http.StatusOK, goals)
+
+	var totalAccumulated float64
+	for _, goal := range goals {
+		totalAccumulated += goal.Amount
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"goals":            goals,
+		"totalAccumulated": totalAccumulated,
+	})
 }

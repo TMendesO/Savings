@@ -5,13 +5,13 @@ import SpendingLimitList from "./SpendingLimitList";
 
 const SpendingLimit = ({ ws }) => {
   const [category, setCategory] = useState("");
-  const [amount, setLimit] = useState(0);
+  const [amount, setAmount] = useState(0);
   const [period, setPeriod] = useState("");
 
   const fetchSpendingLimit = async () => {
     try {
       const response = await getSpendingLimit();
-      setLimit(response);
+      setAmount(response);
     } catch (error) {
       console.error("Error fetching Spending limit", error);
     }
@@ -39,9 +39,7 @@ const SpendingLimit = ({ ws }) => {
           amount: parseFloat(plans.amount),
         });
         ws.send(JSON.stringify({ type: "SPENDING_LIMIT_UPDATED" }));
-        setCategory([...category, data]);
-        setLimit([...amount, data]);
-        setPeriod([...period, data]);
+        fetchSpendingLimit();
         alert("Limite de gastos atualizado com sucesso");
       } catch (error) {
         console.error("erro para cadastrar o limite de gastos", error);
@@ -58,7 +56,7 @@ const SpendingLimit = ({ ws }) => {
           label="Limite de Gastos"
           type="number"
           value={amount}
-          onChange={(e) => setLimit(e.target.value)}
+          onChange={(e) => setAmount(e.target.value)}
           margin="normal"
         />
         <TextField

@@ -22,3 +22,12 @@ func GetWishItems(c *gin.Context) {
 	models.DB.Find(&items)
 	c.JSON(http.StatusOK, items)
 }
+
+func DeleteWishItems(c *gin.Context) {
+	id := c.Param("id")
+	if err := models.DB.Delete(&models.WishItem{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Evento deletado com sucesso"})
+}

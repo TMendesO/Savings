@@ -58,7 +58,24 @@ func CreateTransaction(c *gin.Context) {
 func GetTransactions(c *gin.Context) {
 	var transactions []models.Transaction
 	models.DB.Find(&transactions)
-	c.JSON(http.StatusOK, transactions)
+
+	// Cálculo dos limites e valores acumulados
+	income := 1000.0 // Substitua pelo valor real da renda líquida
+	essentialsLimit, goalsLimit, wishesLimit := models.CalculateMonthlyLimits(income)
+	totalGoals, totalWishes := models.CalculateAccumulatedValues(transactions)
+
+	c.JSON(http.StatusOK, gin.H{
+		"transactions": transactions,
+		"limits": gin.H{
+			"essentials": essentialsLimit,
+			"goals":      goalsLimit,
+			"wishes":     wishesLimit,
+		},
+		"accumulated": gin.H{
+			"totalGoals":  totalGoals,
+			"totalWishes": totalWishes,
+		},
+	})
 }
 
 func DeleteTransaction(c *gin.Context) {

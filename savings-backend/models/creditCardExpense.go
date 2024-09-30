@@ -10,3 +10,7 @@ type CreditCardExpense struct {
 	Value      float64 `json:"value"`
 	Balance    float64 `json:"balance"`
 }
+
+func (card *CreditCardExpense) CalculateBalance() float64 {
+	return card.Value - card.Limit
+}

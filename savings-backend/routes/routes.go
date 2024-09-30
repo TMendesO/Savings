@@ -22,4 +22,5 @@ func SetupRoutes(router *gin.Engine) {
 	router.GET("/spending-limit", controllers.GetSpendingLimits)
 	router.POST("/wish-list", controllers.CreateWishItem)
 	router.GET("/wish-list", controllers.GetWishItems)
+	router.DELETE("/wish-list/:id", controllers.DeleteWishItems)
 }

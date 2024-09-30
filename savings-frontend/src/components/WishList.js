@@ -14,43 +14,42 @@ import {
   MenuItem,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getWishList } from "../services/api";
-import api from "../services/api";
+import { getWishList, addWishItem, removeWishItem } from "../services/api";
 
-const WishList = ({ ws, addWishItem, removeWishItem }) => {
+const WishList = ({ ws }) => {
   const [wishList, setWishList] = useState([]);
-  const [wishTitle, setWishTitle] = useState([]);
-  const [wishDescription, setWishDescription] = useState([]);
-  const [wishPrice, setWishPrice] = useState([]);
-  const [wishPriority, setWishPriority] = useState([]);
+  const [wishTitle, setWishTitle] = useState("");
+  const [wishDescription, setWishDescription] = useState("");
+  const [wishPrice, setWishPrice] = useState("");
+  const [wishPriority, setWishPriority] = useState("");
 
   useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const data = await getWishList();
+        setWishList(data);
+      } catch (error) {
+        console.error("Error fetching wish list", error);
+      }
+    };
+
+    fetchItems();
+
     if (ws) {
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
         if (message.type === "WISH_ADDED") {
-          addWishItem(message.data);
+          setWishList((prev) => [...prev, message.data]);
         }
       };
     }
-  }, [ws, addWishItem]);
-
-  const fetchItems = async () => {
-    try {
-      const data = await getWishList();
-      console.log(data);
-      setWishList(data);
-    } catch (error) {
-      console.error("Error fetching wish list", error);
-    }
-  };
+  }, [ws]);
 
   const handleAddWish = async (e) => {
     e.preventDefault();
     if (wishTitle && wishDescription && wishPrice && wishPriority) {
       const parsedPrice = parseFloat(wishPrice);
-
-      const whishs = {
+      const wish = {
         title: wishTitle,
         description: wishDescription,
         price: parsedPrice,
@@ -58,10 +57,10 @@ const WishList = ({ ws, addWishItem, removeWishItem }) => {
       };
 
       try {
-        const response = await api.post("/wish-list", whishs);
+        const response = await addWishItem(wish);
         if (response.status === 200) {
-          ws.send(JSON.stringify({ type: "WISH_LIST", data: response.data }));
-          addWishItem(response.data);
+          ws.send(JSON.stringify({ type: "WISH_ADDED", data: response.data }));
+          setWishList((prev) => [...prev, response.data]);
           resetForm();
         }
       } catch (error) {
@@ -71,6 +70,7 @@ const WishList = ({ ws, addWishItem, removeWishItem }) => {
       console.error("Todos os campos são obrigatórios.");
     }
   };
+
   const resetForm = () => {
     setWishTitle("");
     setWishDescription("");
@@ -81,83 +81,95 @@ const WishList = ({ ws, addWishItem, removeWishItem }) => {
   const handleRemoveItem = async (id) => {
     try {
       await removeWishItem(id);
-      fetchItems();
+      setWishList((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
       console.error("Error removing wish item", error);
     }
   };
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
   return (
     <Paper elevation={3}>
       <Box p={2}>
-        <Typography variant="h6" component="div" gutterBottom>
+        <Typography variant="h6" component="h3" gutterBottom>
           Lista de Desejos
         </Typography>
         <form onSubmit={handleAddWish}>
           <TextField
-            label="Titulo"
+            fullWidth
+            margin="normal"
+            label="Título"
+            type="text"
             value={wishTitle}
             onChange={(e) => setWishTitle(e.target.value)}
-            fullWidth
-            margin="normal"
           />
           <TextField
+            fullWidth
+            margin="normal"
             label="Descrição"
+            type="text"
             value={wishDescription}
             onChange={(e) => setWishDescription(e.target.value)}
-            fullWidth
-            margin="normal"
           />
           <TextField
+            fullWidth
+            margin="normal"
             label="Preço"
             type="number"
             value={wishPrice}
             onChange={(e) => setWishPrice(e.target.value)}
-            fullWidth
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
           />
           <Select
-            value={wishPriority}
             fullWidth
+            value={wishPriority}
             onChange={(e) => setWishPriority(e.target.value)}
-            label="Pioridade"
+            displayEmpty
+            margin="normal"
           >
-            <MenuItem value="alta">Alta</MenuItem>
-            <MenuItem value="media">Média</MenuItem>
-            <MenuItem value="baixa">baixa</MenuItem>
+            <MenuItem value="" disabled>
+              Prioridade
+            </MenuItem>
+            <MenuItem value="high">Alta</MenuItem>
+            <MenuItem value="medium">Média</MenuItem>
+            <MenuItem value="low">Baixa</MenuItem>
           </Select>
-          <p></p>
-          <Button type="submit" variant="contained" color="primary">
-            Adicionar{" "}
-          </Button>
+          <Box mt={2}>
+            <Button fullWidth variant="contained" color="primary" type="submit">
+              Adicionar Desejo
+            </Button>
+          </Box>
         </form>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Titulo</TableCell>
-              <TableCell>Descrição</TableCell>
-              <TableCell>Preço</TableCell>
-              <TableCell>Prioridade</TableCell>
-              <TableCell>Ação</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {wishList.map((whish) => (
-              <TableRow key={whish.id}>
-                <TableCell>{whish.title}</TableCell>
-                <TableCell>{whish.description}</TableCell>
-                <TableCell>{whish.price}</TableCell>
-                <TableCell>{whish.priority}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </Box>
+
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Título</TableCell>
+            <TableCell>Descrição</TableCell>
+            <TableCell>Preço</TableCell>
+            <TableCell>Prioridade</TableCell>
+            <TableCell>Ação</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {wishList.map((wish) => (
+            <TableRow key={wish.id}>
+              <TableCell>{wish.title}</TableCell>
+              <TableCell>{wish.description}</TableCell>
+              <TableCell>{wish.price}</TableCell>
+              <TableCell>{wish.priority}</TableCell>
+              <TableCell>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => handleRemoveItem(wish.ID)}
+                >
+                  <DeleteIcon />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </Paper>
   );
 };
