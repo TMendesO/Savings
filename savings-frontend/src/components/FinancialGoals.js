@@ -17,18 +17,25 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 const FinancialGoals = ({ ws, addFinancialGoal }) => {
   const [goals, setGoals] = useState([]);
-  const [goalsTitle, setGoalsTitle] = useState([]);
-  const [goalsAmount, setGoalsAmount] = useState([]);
-  const [goalsDate, setGoalsDate] = useState([]);
+  const [goalsTitle, setGoalsTitle] = useState("");
+  const [goalsAmount, setGoalsAmount] = useState("");
+  const [goalsDate, setGoalsDate] = useState("");
 
   const fetchGoals = async () => {
     try {
-      const data = await getFinancialGoals();
-      setGoals(data);
+      const response = await getFinancialGoals();
+      console.log(response);
+      const data = response.goals || [];
+      setGoals(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching financial goals", error);
+      setGoals([]);
     }
   };
+
+  useEffect(() => {
+    fetchGoals();
+  }, []);
 
   useEffect(() => {
     if (ws) {
@@ -51,7 +58,6 @@ const FinancialGoals = ({ ws, addFinancialGoal }) => {
         target_date: goalsDate,
         amount: parsedAmount,
       };
-      console.log(expenses);
 
       try {
         const response = await api.post("/financial-goals", expenses);
@@ -61,6 +67,7 @@ const FinancialGoals = ({ ws, addFinancialGoal }) => {
           );
           addFinancialGoal(response.data);
           resetForm();
+          fetchGoals();
         }
       } catch (error) {
         console.error("Erro ao criar a meta", error);
@@ -69,6 +76,7 @@ const FinancialGoals = ({ ws, addFinancialGoal }) => {
       console.error("Todos os campos são obrigatórios.");
     }
   };
+
   const resetForm = () => {
     setGoalsTitle("");
     setGoalsAmount("");
@@ -83,10 +91,6 @@ const FinancialGoals = ({ ws, addFinancialGoal }) => {
       console.error("Error removing financial goal", error);
     }
   };
-
-  useEffect(() => {
-    fetchGoals();
-  }, []);
 
   return (
     <Paper elevation={3}>
@@ -119,27 +123,33 @@ const FinancialGoals = ({ ws, addFinancialGoal }) => {
             InputLabelProps={{ shrink: true }}
           />
           <Button type="submit" variant="contained" color="primary">
-            Adicionar{" "}
+            Adicionar
           </Button>
         </form>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Titulo</TableCell>
-              <TableCell>Valor</TableCell>
-              <TableCell>Data Prevista</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {goals.map((goal) => (
-              <TableRow key={goal.id}>
-                <TableCell>{goal.title}</TableCell>
-                <TableCell>{goal.amount}</TableCell>
-                <TableCell>{goal.target_date}</TableCell>
+        {goals.length > 0 ? (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Titulo</TableCell>
+                <TableCell>Valor</TableCell>
+                <TableCell>Data Prevista</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {goals.map((goal) => (
+                <TableRow key={goal.id}>
+                  <TableCell>{goal.title}</TableCell>
+                  <TableCell>{goal.amount}</TableCell>
+                  <TableCell>{goal.target_date}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <Typography variant="body1">
+            Nenhuma meta financeira encontrada.
+          </Typography>
+        )}
       </Box>
     </Paper>
   );

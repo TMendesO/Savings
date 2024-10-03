@@ -53,6 +53,8 @@ function TransactionList({ ws }) {
     }
   }, [ws]);
 
+  const transactionsT = transactions.transactions;
+
   return (
     <Container component={Paper} style={{ marginTop: "20px" }}>
       <Table size="small">
@@ -67,8 +69,8 @@ function TransactionList({ ws }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {Array.isArray(transactions) && transactions.length > 0 ? (
-            transactions.map((transaction) => (
+          {Array.isArray(transactionsT) && transactionsT.length > 0 ? (
+            transactionsT.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell>
                   {transaction.type === "gasto" ? (
